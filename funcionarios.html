@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cadastro de Funcionários - Sistema de Controle</title>
+    
+    <!-- Bootstrap 4 CSS -->
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="../css/styles.css">
+    <!-- p5.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/p5.min.js"></script>
+</head>
+<body>
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+        <a class="navbar-brand" href="../index.html">Sistema de Controle</a>
+        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNav">
+            <ul class="navbar-nav">
+                <li class="nav-item">
+                    <a class="nav-link" href="produtos.html">Produtos</a>
+                </li>
+                <li class="nav-item active">
+                    <a class="nav-link" href="funcionarios.html">Funcionários</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="clientes.html">Clientes</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="vendas.html">Vendas</a>
+                </li>
+            </ul>
+        </div>
+    </nav>
+
+    <!-- Conteúdo Principal -->
+    <div class="container mt-4">
+        <h2>Cadastro de Funcionários</h2>
+        
+        <!-- Formulário de Cadastro -->
+        <div class="form-container">
+            <form id="formFuncionario" onsubmit="return salvarFuncionario(event)">
+                <div class="form-row">
+                    <div class="form-group col-md-2">
+                        <label for="id">ID</label>
+                        <input type="text" class="form-control" id="id" required readonly>
+                    </div>
+                    <div class="form-group col-md-10">
+                        <label for="nome">Nome Completo</label>
+                        <input type="text" class="form-control" id="nome" required>
+                    </div>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group col-md-4">
+                        <label for="cpf">CPF</label>
+                        <input type="text" class="form-control cpf-mask" id="cpf" required>
+                        <div class="invalid-feedback">CPF inválido</div>
+                    </div>
+                    <div class="form-group col-md-4">
+                        <label for="rg">RG</label>
+                        <input type="text" class="form-control" id="rg" required>
+                    </div>
+                    <div class="form-group col-md-4">
+                        <label for="setor">Setor</label>
+                        <select class="form-control" id="setor" required>
+                            <option value="">Selecione...</option>
+                            <option value="vendas">Vendas</option>
+                            <option value="estoque">Estoque</option>
+                            <option value="administrativo">Administrativo</option>
+                            <option value="financeiro">Financeiro</option>
+                            <option value="rh">Recursos Humanos</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group col-md-6">
+                        <label for="dataNascimento">Data de Nascimento</label>
+                        <input type="date" class="form-control" id="dataNascimento" required>
+                        <div class="invalid-feedback">Data de nascimento inválida</div>
+                    </div>
+                    <div class="form-group col-md-6">
+                        <label for="dataAdmissao">Data de Admissão</label>
+                        <input type="date" class="form-control" id="dataAdmissao" required>
+                    </div>
+                </div>
+                
+                <button type="submit" class="btn btn-primary">Cadastrar Funcionário</button>
+                <button type="button" class="btn btn-secondary" onclick="limparFormulario()">Limpar</button>
+            </form>
+        </div>
+
+        <!-- Tabela de Funcionários -->
+        <div class="table-container mt-4">
+            <h3>Funcionários Cadastrados</h3>
+            <div class="table-responsive">
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Nome</th>
+                            <th>CPF</th>
+                            <th>RG</th>
+                            <th>Setor</th>
+                            <th>Data de Admissão</th>
+                            <th>Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tabelaFuncionarios">
+                        <!-- Funcionários serão inseridos aqui via JavaScript -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.4/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+    <script src="../js/main.js"></script>
+    <script>
+        // Variável para armazenar os funcionários
+        let funcionarios = JSON.parse(localStorage.getItem('funcionarios')) || [];
+        let proximoId = 1;
+
+        // Função para obter próximo ID
+        function obterProximoId() {
+            if (funcionarios.length === 0) return 1;
+            const maxId = Math.max(...funcionarios.map(f => parseInt(f.id)));
+            return maxId + 1;
+        }
+
+        // Função para validar idade mínima
+        function validarIdadeMinima(dataNascimento) {
+            const hoje = new Date();
+            const nascimento = new Date(dataNascimento);
+            let idade = hoje.getFullYear() - nascimento.getFullYear();
+            const mes = hoje.getMonth() - nascimento.getMonth();
+            
+            if (mes < 0 || (mes === 0 && hoje.getDate() < nascimento.getDate())) {
+                idade--;
+            }
+            
+            return idade >= 18;
+        }
+
+        // Função para salvar funcionário
+        function salvarFuncionario(event) {
+            event.preventDefault();
+            
+            const cpf = document.getElementById('cpf').value;
+            const dataNascimento = document.getElementById('dataNascimento').value;
+            
+            // Validar CPF
+            if (!validarCPF(cpf)) {
+                document.getElementById('cpf').classList.add('is-invalid');
+                mostrarAlerta('CPF inválido!', 'danger');
+                return false;
+            }
+            
+            // Validar idade mínima
+            if (!validarIdadeMinima(dataNascimento)) {
+                document.getElementById('dataNascimento').classList.add('is-invalid');
+                mostrarAlerta('O funcionário deve ter no mínimo 18 anos!', 'danger');
+                return false;
+            }
+            
+            const funcionario = {
+                id: document.getElementById('id').value || obterProximoId(),
+                nome: document.getElementById('nome').value,
+                cpf: cpf,
+                rg: document.getElementById('rg').value,
+                setor: document.getElementById('setor').value,
+                dataNascimento: dataNascimento,
+                dataAdmissao: document.getElementById('dataAdmissao').value
+            };
+
+            // Adicionar ou atualizar funcionário
+            const index = funcionarios.findIndex(f => f.id == funcionario.id);
+            if (index >= 0) {
+                funcionarios[index] = funcionario;
+                mostrarAlerta('Funcionário atualizado com sucesso!', 'success');
+            } else {
+                // Verificar se CPF já existe
+                if (funcionarios.some(f => f.cpf === funcionario.cpf)) {
+                    mostrarAlerta('CPF já cadastrado!', 'danger');
+                    return false;
+                }
+                funcionarios.push(funcionario);
+                mostrarAlerta('Funcionário cadastrado com sucesso!', 'success');
+            }
+
+            // Salvar no localStorage
+            localStorage.setItem('funcionarios', JSON.stringify(funcionarios));
+            
+            // Atualizar tabela e limpar formulário
+            atualizarTabela();
+            limparFormulario();
+            
+            return false;
+        }
+
+        // Função para limpar formulário
+        function limparFormulario() {
+            document.getElementById('formFuncionario').reset();
+            document.getElementById('id').value = '';
+            document.getElementById('cpf').classList.remove('is-invalid');
+            document.getElementById('dataNascimento').classList.remove('is-invalid');
+        }
+
+        // Função para editar funcionário
+        function editarFuncionario(id) {
+            const funcionario = funcionarios.find(f => f.id == id);
+            if (funcionario) {
+                document.getElementById('id').value = funcionario.id;
+                document.getElementById('nome').value = funcionario.nome;
+                document.getElementById('cpf').value = funcionario.cpf;
+                document.getElementById('rg').value = funcionario.rg;
+                document.getElementById('setor').value = funcionario.setor;
+                document.getElementById('dataNascimento').value = funcionario.dataNascimento;
+                document.getElementById('dataAdmissao').value = funcionario.dataAdmissao;
+            }
+        }
+
+        // Função para excluir funcionário
+        function excluirFuncionario(id) {
+            if (confirm('Tem certeza que deseja excluir este funcionário?')) {
+                funcionarios = funcionarios.filter(f => f.id != id);
+                localStorage.setItem('funcionarios', JSON.stringify(funcionarios));
+                atualizarTabela();
+                mostrarAlerta('Funcionário excluído com sucesso!', 'success');
+            }
+        }
+
+        // Função para atualizar tabela
+        function atualizarTabela() {
+            const tbody = document.getElementById('tabelaFuncionarios');
+            tbody.innerHTML = '';
+            
+            funcionarios.forEach(funcionario => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>${funcionario.id}</td>
+                    <td>${funcionario.nome}</td>
+                    <td>${funcionario.cpf}</td>
+                    <td>${funcionario.rg}</td>
+                    <td>${funcionario.setor}</td>
+                    <td>${new Date(funcionario.dataAdmissao).toLocaleDateString()}</td>
+                    <td>
+                        <button class="btn btn-sm btn-info" onclick="editarFuncionario(${funcionario.id})">Editar</button>
+                        <button class="btn btn-sm btn-danger" onclick="excluirFuncionario(${funcionario.id})">Excluir</button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        // Carregar tabela ao iniciar
+        document.addEventListener('DOMContentLoaded', function() {
+            atualizarTabela();
+        });
+    </script>
+</body>
+</html> 

@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cadastro de Produtos - Sistema de Controle</title>
+    
+    <!-- Bootstrap 4 CSS -->
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="../css/styles.css">
+    <!-- p5.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/p5.min.js"></script>
+</head>
+<body>
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+        <a class="navbar-brand" href="../index.html">Sistema de Controle</a>
+        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNav">
+            <ul class="navbar-nav">
+                <li class="nav-item active">
+                    <a class="nav-link" href="produtos.html">Produtos</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="funcionarios.html">Funcionários</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="clientes.html">Clientes</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="vendas.html">Vendas</a>
+                </li>
+            </ul>
+        </div>
+    </nav>
+
+    <!-- Conteúdo Principal -->
+    <div class="container mt-4">
+        <h2>Cadastro de Produtos</h2>
+        
+        <!-- Formulário de Cadastro -->
+        <div class="form-container">
+            <form id="formProduto" onsubmit="return salvarProduto(event)">
+                <div class="form-row">
+                    <div class="form-group col-md-2">
+                        <label for="id">ID</label>
+                        <input type="text" class="form-control" id="id" required readonly>
+                    </div>
+                    <div class="form-group col-md-6">
+                        <label for="nome">Nome do Produto</label>
+                        <input type="text" class="form-control" id="nome" required>
+                    </div>
+                    <div class="form-group col-md-4">
+                        <label for="quantidade">Quantidade</label>
+                        <input type="number" class="form-control" id="quantidade" min="0" required>
+                    </div>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group col-md-4">
+                        <label for="tipo">Tipo</label>
+                        <select class="form-control" id="tipo" required>
+                            <option value="">Selecione...</option>
+                            <option value="alimento">Alimento</option>
+                            <option value="bebida">Bebida</option>
+                            <option value="limpeza">Limpeza</option>
+                            <option value="eletronico">Eletrônico</option>
+                            <option value="outro">Outro</option>
+                        </select>
+                    </div>
+                    <div class="form-group col-md-4">
+                        <label for="dataChegada">Data de Chegada</label>
+                        <input type="date" class="form-control" id="dataChegada" required>
+                    </div>
+                    <div class="form-group col-md-4">
+                        <label for="dataVencimento">Data de Vencimento</label>
+                        <input type="date" class="form-control" id="dataVencimento">
+                    </div>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group col-md-8">
+                        <label for="fornecedor">Fornecedor</label>
+                        <input type="text" class="form-control" id="fornecedor" required>
+                    </div>
+                    <div class="form-group col-md-4">
+                        <label for="preco">Preço</label>
+                        <div class="input-group">
+                            <div class="input-group-prepend">
+                                <span class="input-group-text">R$</span>
+                            </div>
+                            <input type="number" class="form-control" id="preco" step="0.01" min="0" required>
+                        </div>
+                    </div>
+                </div>
+                
+                <button type="submit" class="btn btn-primary">Cadastrar Produto</button>
+                <button type="button" class="btn btn-secondary" onclick="limparFormulario()">Limpar</button>
+            </form>
+        </div>
+
+        <!-- Tabela de Produtos -->
+        <div class="table-container mt-4">
+            <h3>Produtos Cadastrados</h3>
+            <div class="table-responsive">
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Nome</th>
+                            <th>Quantidade</th>
+                            <th>Tipo</th>
+                            <th>Fornecedor</th>
+                            <th>Preço</th>
+                            <th>Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tabelaProdutos">
+                        <!-- Produtos serão inseridos aqui via JavaScript -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.4/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+    <script src="../js/main.js"></script>
+    <script>
+        // Variável para armazenar os produtos
+        let produtos = JSON.parse(localStorage.getItem('produtos')) || [];
+        let proximoId = 1;
+
+        // Função para obter próximo ID
+        function obterProximoId() {
+            if (produtos.length === 0) return 1;
+            const maxId = Math.max(...produtos.map(p => parseInt(p.id)));
+            return maxId + 1;
+        }
+
+        // Função para salvar produto
+        function salvarProduto(event) {
+            event.preventDefault();
+            
+            const produto = {
+                id: document.getElementById('id').value || obterProximoId(),
+                nome: document.getElementById('nome').value,
+                quantidade: document.getElementById('quantidade').value,
+                tipo: document.getElementById('tipo').value,
+                dataChegada: document.getElementById('dataChegada').value,
+                dataVencimento: document.getElementById('dataVencimento').value,
+                fornecedor: document.getElementById('fornecedor').value,
+                preco: document.getElementById('preco').value
+            };
+
+            // Validações
+            if (!validarData(produto.dataChegada)) {
+                mostrarAlerta('Data de chegada inválida!', 'danger');
+                return false;
+            }
+
+            if (produto.dataVencimento && !validarData(produto.dataVencimento)) {
+                mostrarAlerta('Data de vencimento inválida!', 'danger');
+                return false;
+            }
+
+            // Adicionar ou atualizar produto
+            const index = produtos.findIndex(p => p.id == produto.id);
+            if (index >= 0) {
+                produtos[index] = produto;
+                mostrarAlerta('Produto atualizado com sucesso!', 'success');
+            } else {
+                produtos.push(produto);
+                mostrarAlerta('Produto cadastrado com sucesso!', 'success');
+            }
+
+            // Salvar no localStorage
+            localStorage.setItem('produtos', JSON.stringify(produtos));
+            
+            // Atualizar tabela e limpar formulário
+            atualizarTabela();
+            limparFormulario();
+            
+            return false;
+        }
+
+        // Função para limpar formulário
+        function limparFormulario() {
+            document.getElementById('formProduto').reset();
+            document.getElementById('id').value = '';
+        }
+
+        // Função para editar produto
+        function editarProduto(id) {
+            const produto = produtos.find(p => p.id == id);
+            if (produto) {
+                document.getElementById('id').value = produto.id;
+                document.getElementById('nome').value = produto.nome;
+                document.getElementById('quantidade').value = produto.quantidade;
+                document.getElementById('tipo').value = produto.tipo;
+                document.getElementById('dataChegada').value = produto.dataChegada;
+                document.getElementById('dataVencimento').value = produto.dataVencimento;
+                document.getElementById('fornecedor').value = produto.fornecedor;
+                document.getElementById('preco').value = produto.preco;
+            }
+        }
+
+        // Função para excluir produto
+        function excluirProduto(id) {
+            if (confirm('Tem certeza que deseja excluir este produto?')) {
+                produtos = produtos.filter(p => p.id != id);
+                localStorage.setItem('produtos', JSON.stringify(produtos));
+                atualizarTabela();
+                mostrarAlerta('Produto excluído com sucesso!', 'success');
+            }
+        }
+
+        // Função para atualizar tabela
+        function atualizarTabela() {
+            const tbody = document.getElementById('tabelaProdutos');
+            tbody.innerHTML = '';
+            
+            produtos.forEach(produto => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>${produto.id}</td>
+                    <td>${produto.nome}</td>
+                    <td>${produto.quantidade}</td>
+                    <td>${produto.tipo}</td>
+                    <td>${produto.fornecedor}</td>
+                    <td>${formatarMoeda(produto.preco)}</td>
+                    <td>
+                        <button class="btn btn-sm btn-info" onclick="editarProduto(${produto.id})">Editar</button>
+                        <button class="btn btn-sm btn-danger" onclick="excluirProduto(${produto.id})">Excluir</button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        // Carregar tabela ao iniciar
+        document.addEventListener('DOMContentLoaded', function() {
+            atualizarTabela();
+        });
+    </script>
+</body>
+</html> 

@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Registro de Vendas - Sistema de Controle</title>
+    
+    <!-- Bootstrap 4 CSS -->
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="../css/styles.css">
+    <!-- p5.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/p5.min.js"></script>
+</head>
+<body>
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+        <a class="navbar-brand" href="../index.html">Sistema de Controle</a>
+        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNav">
+            <ul class="navbar-nav">
+                <li class="nav-item">
+                    <a class="nav-link" href="produtos.html">Produtos</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="funcionarios.html">Funcionários</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="clientes.html">Clientes</a>
+                </li>
+                <li class="nav-item active">
+                    <a class="nav-link" href="vendas.html">Vendas</a>
+                </li>
+            </ul>
+        </div>
+    </nav>
+
+    <!-- Conteúdo Principal -->
+    <div class="container mt-4">
+        <h2>Registro de Vendas</h2>
+        
+        <!-- Formulário de Venda -->
+        <div class="form-container">
+            <form id="formVenda" onsubmit="return salvarVenda(event)">
+                <div class="form-row">
+                    <div class="form-group col-md-4">
+                        <label for="id">Número da Venda</label>
+                        <input type="text" class="form-control" id="id" value="Será gerado automaticamente" required readonly>
+                    </div>
+                    <div class="form-group col-md-4">
+                        <label for="data">Data da Venda</label>
+                        <input type="date" class="form-control" id="data" required>
+                    </div>
+                    <div class="form-group col-md-4">
+                        <label for="funcionario">Funcionário Responsável</label>
+                        <select class="form-control" id="funcionario" required>
+                            <option value="">Selecione...</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group col-md-12">
+                        <label for="cliente">Cliente</label>
+                        <select class="form-control" id="cliente" required>
+                            <option value="">Selecione...</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group col-md-12">
+                        <label>Produtos</label>
+                        <div class="table-responsive">
+                            <table class="table table-bordered">
+                                <thead>
+                                    <tr>
+                                        <th>Produto</th>
+                                        <th>Quantidade</th>
+                                        <th>Preço Unitário</th>
+                                        <th>Subtotal</th>
+                                        <th>Ações</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="tabelaProdutosVenda">
+                                    <!-- Produtos da venda serão inseridos aqui -->
+                                </tbody>
+                                <tfoot>
+                                    <tr>
+                                        <td colspan="5">
+                                            <button type="button" class="btn btn-success btn-sm" onclick="adicionarProduto()">
+                                                Adicionar Produto
+                                            </button>
+                                        </td>
+                                    </tr>
+                                </tfoot>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group col-md-6">
+                        <label>Total da Venda</label>
+                        <div class="input-group">
+                            <div class="input-group-prepend">
+                                <span class="input-group-text">R$</span>
+                            </div>
+                            <input type="text" class="form-control" id="totalVenda" readonly>
+                        </div>
+                    </div>
+                    <div class="form-group col-md-6">
+                        <label for="formaPagamento">Forma de Pagamento</label>
+                        <select class="form-control" id="formaPagamento" required>
+                            <option value="">Selecione...</option>
+                            <option value="dinheiro">Dinheiro</option>
+                            <option value="cartao_credito">Cartão de Crédito</option>
+                            <option value="cartao_debito">Cartão de Débito</option>
+                            <option value="pix">PIX</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <button type="submit" class="btn btn-primary">Registrar Venda</button>
+                <button type="button" class="btn btn-secondary" onclick="limparFormulario()">Limpar</button>
+            </form>
+        </div>
+
+        <!-- Tabela de Vendas -->
+        <div class="table-container mt-4">
+            <h3>Vendas Realizadas</h3>
+            <div class="table-responsive">
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>Nº Venda</th>
+                            <th>Data</th>
+                            <th>Cliente</th>
+                            <th>Funcionário</th>
+                            <th>Total</th>
+                            <th>Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tabelaVendas">
+                        <!-- Vendas serão inseridas aqui via JavaScript -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de Seleção de Produto -->
+    <div class="modal fade" id="modalProduto" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Adicionar Produto</h5>
+                    <button type="button" class="close" data-dismiss="modal">
+                        <span>&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label for="produtoSelect">Produto</label>
+                        <select class="form-control" id="produtoSelect">
+                            <option value="">Selecione...</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="quantidadeProduto">Quantidade</label>
+                        <input type="number" class="form-control" id="quantidadeProduto" min="1" value="1">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-primary" onclick="confirmarProduto()">Adicionar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.4/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+    <script src="../js/main.js"></script>
+    <script>
+        // Variáveis globais
+        let vendas = JSON.parse(localStorage.getItem('vendas')) || [];
+        let produtos = JSON.parse(localStorage.getItem('produtos')) || [];
+        let clientes = JSON.parse(localStorage.getItem('clientes')) || [];
+        let funcionarios = JSON.parse(localStorage.getItem('funcionarios')) || [];
+        let produtosVenda = [];
+        let proximoId = 1;
+
+        // Função para obter próximo ID
+        function obterProximoId() {
+            if (vendas.length === 0) return 1;
+            const maxId = Math.max(...vendas.map(v => parseInt(v.id)));
+            return maxId + 1;
+        }
+
+        // Carregar dados iniciais
+        document.addEventListener('DOMContentLoaded', function() {
+            carregarSelects();
+            atualizarTabela();
+        });
+
+        // Função para carregar selects
+        function carregarSelects() {
+            const selectFuncionario = document.getElementById('funcionario');
+            const selectCliente = document.getElementById('cliente');
+            const selectProduto = document.getElementById('produtoSelect');
+            
+            // Limpar selects
+            selectFuncionario.innerHTML = '<option value="">Selecione...</option>';
+            selectCliente.innerHTML = '<option value="">Selecione...</option>';
+            selectProduto.innerHTML = '<option value="">Selecione...</option>';
+            
+            // Carregar funcionários
+            funcionarios.forEach(funcionario => {
+                selectFuncionario.innerHTML += `
+                    <option value="${funcionario.id}">${funcionario.nome}</option>
+                `;
+            });
+            
+            // Carregar clientes
+            clientes.forEach(cliente => {
+                selectCliente.innerHTML += `
+                    <option value="${cliente.id}">${cliente.nome} - ${cliente.cpf}</option>
+                `;
+            });
+            
+            // Carregar produtos
+            produtos.forEach(produto => {
+                if (produto.quantidade > 0) {
+                    selectProduto.innerHTML += `
+                        <option value="${produto.id}">${produto.nome} - R$ ${produto.preco}</option>
+                    `;
+                }
+            });
+        }
+
+        // Função para adicionar produto
+        function adicionarProduto() {
+            $('#modalProduto').modal('show');
+        }
+
+        // Função para confirmar adição de produto
+        function confirmarProduto() {
+            const produtoId = document.getElementById('produtoSelect').value;
+            const quantidade = parseInt(document.getElementById('quantidadeProduto').value);
+            
+            if (!produtoId || quantidade < 1) {
+                mostrarAlerta('Selecione um produto e quantidade válida!', 'danger');
+                return;
+            }
+            
+            const produto = produtos.find(p => p.id == produtoId);
+            
+            if (quantidade > produto.quantidade) {
+                mostrarAlerta('Quantidade indisponível em estoque!', 'danger');
+                return;
+            }
+            
+            // Verificar se produto já está na venda
+            const index = produtosVenda.findIndex(p => p.id == produtoId);
+            if (index >= 0) {
+                produtosVenda[index].quantidade += quantidade;
+                produtosVenda[index].subtotal = produtosVenda[index].quantidade * produtosVenda[index].precoUnitario;
+            } else {
+                produtosVenda.push({
+                    id: produto.id,
+                    nome: produto.nome,
+                    quantidade: quantidade,
+                    precoUnitario: parseFloat(produto.preco),
+                    subtotal: quantidade * parseFloat(produto.preco)
+                });
+            }
+            
+            atualizarTabelaProdutos();
+            $('#modalProduto').modal('hide');
+        }
+
+        // Função para remover produto da venda
+        function removerProduto(index) {
+            produtosVenda.splice(index, 1);
+            atualizarTabelaProdutos();
+        }
+
+        // Função para atualizar tabela de produtos da venda
+        function atualizarTabelaProdutos() {
+            const tbody = document.getElementById('tabelaProdutosVenda');
+            tbody.innerHTML = '';
+            let total = 0;
+            
+            produtosVenda.forEach((produto, index) => {
+                total += produto.subtotal;
+                tbody.innerHTML += `
+                    <tr>
+                        <td>${produto.nome}</td>
+                        <td>${produto.quantidade}</td>
+                        <td>${formatarMoeda(produto.precoUnitario)}</td>
+                        <td>${formatarMoeda(produto.subtotal)}</td>
+                        <td>
+                            <button type="button" class="btn btn-danger btn-sm" onclick="removerProduto(${index})">
+                                Remover
+                            </button>
+                        </td>
+                    </tr>
+                `;
+            });
+            
+            document.getElementById('totalVenda').value = formatarMoeda(total);
+        }
+
+        // Função para salvar venda
+        function salvarVenda(event) {
+            event.preventDefault();
+            
+            if (produtosVenda.length === 0) {
+                mostrarAlerta('Adicione pelo menos um produto à venda!', 'danger');
+                return false;
+            }
+            
+            const venda = {
+                id: document.getElementById('id').value || obterProximoId(),
+                data: document.getElementById('data').value,
+                funcionarioId: document.getElementById('funcionario').value,
+                clienteId: document.getElementById('cliente').value,
+                produtos: produtosVenda,
+                total: produtosVenda.reduce((total, produto) => total + produto.subtotal, 0),
+                formaPagamento: document.getElementById('formaPagamento').value
+            };
+
+            // Atualizar estoque
+            produtosVenda.forEach(produtoVenda => {
+                const produto = produtos.find(p => p.id == produtoVenda.id);
+                if (produto) {
+                    produto.quantidade -= produtoVenda.quantidade;
+                }
+            });
+            
+            // Salvar venda
+            vendas.push(venda);
+            localStorage.setItem('vendas', JSON.stringify(vendas));
+            localStorage.setItem('produtos', JSON.stringify(produtos));
+            
+            mostrarAlerta('Venda registrada com sucesso!', 'success');
+            atualizarTabela();
+            limparFormulario();
+            
+            return false;
+        }
+
+        // Função para limpar formulário
+        function limparFormulario() {
+            document.getElementById('formVenda').reset();
+            document.getElementById('id').value = '';
+            produtosVenda = [];
+            atualizarTabelaProdutos();
+        }
+
+        // Função para visualizar detalhes da venda
+        function visualizarVenda(id) {
+            const venda = vendas.find(v => v.id == id);
+            if (venda) {
+                const cliente = clientes.find(c => c.id == venda.clienteId);
+                const funcionario = funcionarios.find(f => f.id == venda.funcionarioId);
+                
+                let detalhes = `
+                    Venda #${venda.id}\n
+                    Data: ${new Date(venda.data).toLocaleDateString()}\n
+                    Cliente: ${cliente ? cliente.nome : 'N/A'}\n
+                    Funcionário: ${funcionario ? funcionario.nome : 'N/A'}\n
+                    Forma de Pagamento: ${venda.formaPagamento}\n
+                    \nProdutos:\n`;
+                
+                venda.produtos.forEach(produto => {
+                    detalhes += `
+                        ${produto.nome}
+                        Quantidade: ${produto.quantidade}
+                        Preço: ${formatarMoeda(produto.precoUnitario)}
+                        Subtotal: ${formatarMoeda(produto.subtotal)}\n`;
+                });
+                
+                detalhes += `\nTotal: ${formatarMoeda(venda.total)}`;
+                
+                alert(detalhes);
+            }
+        }
+
+        // Função para atualizar tabela de vendas
+        function atualizarTabela() {
+            const tbody = document.getElementById('tabelaVendas');
+            tbody.innerHTML = '';
+            
+            vendas.forEach(venda => {
+                const cliente = clientes.find(c => c.id == venda.clienteId);
+                const funcionario = funcionarios.find(f => f.id == venda.funcionarioId);
+                
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>Venda #${venda.id}</td>
+                    <td>${new Date(venda.data).toLocaleDateString()}</td>
+                    <td>${cliente ? cliente.nome : 'N/A'}</td>
+                    <td>${funcionario ? funcionario.nome : 'N/A'}</td>
+                    <td>${formatarMoeda(venda.total)}</td>
+                    <td>
+                        <button class="btn btn-sm btn-info" onclick="visualizarVenda(${venda.id})">
+                            Detalhes
+                        </button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+    </script>
+</body>
+</html> 
